@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MetaMax Fashions — website
 
-## Getting Started
+Corporate website for **MetaMax Fashions**, a garments buying house in Dhaka, Bangladesh.
+Built with Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS v4, Framer Motion and Lucide icons.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://www.metamaxfashions.com`) in production so canonical URLs, the sitemap and structured data use the live domain.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Where to edit content
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| What | File |
+| --- | --- |
+| Company name, email, phones, WhatsApp, address, MD details & portrait | `lib/site.ts` |
+| Navigation, stats, services, process, standards, testimonials, MD message, sustainability copy | `lib/content.ts` |
+| Apparel categories, styles, fabrics, MOQ & lead times | `lib/catalog.ts` |
+| Photography (Unsplash ids, named by subject) | `lib/images.ts` |
+| Colours, fonts and design tokens | `app/globals.css` |
 
-## Learn More
+## Before launch — please review
 
-To learn more about Next.js, take a look at the following resources:
+- **Placeholder figures**: statistics (factories, pieces per year, markets, capacity), testimonials (anonymised), and the certification list are representative. Replace them with verified MetaMax data.
+- **Managing Director**: add the official portrait to `public/` and set `site.md.portrait` (e.g. `/images/md-portrait.jpg`); review the leadership message in `lib/content.ts`.
+- **Logo**: `components/brand/logo.tsx` and `app/icon.svg` are an SVG redraw of the business-card monogram — swap in the official vector logo when available.
+- **Inquiry delivery**: `app/actions.ts → deliverInquiry()` currently only validates and logs. Connect it to your email provider or CRM.
+- **Photography**: stock images from Unsplash; replacing them with your own factory and product photos will strengthen credibility.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/                 routes (home, about, managing-director, services, products/[slug],
+                     custom-design, manufacturing, sustainability, partnerships, contact)
+components/motion/   reveal, animated headings, parallax, counters, slideshow, carousel, intro
+components/sections/ page hero and shared section blocks
+components/forms/    inquiry form + accessible field helpers
+lib/                 content, catalog, SEO helpers, validation
+```

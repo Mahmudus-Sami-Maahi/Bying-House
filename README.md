@@ -1,44 +1,29 @@
-# MetaMax Fashions — website
+# MetaMax Fashions
 
-Corporate website for **MetaMax Fashions**, a garments buying house in Dhaka, Bangladesh.
-Built with Next.js 16 (App Router, Cache Components), TypeScript, Tailwind CSS v4, Framer Motion and Lucide icons.
+Website, admin panel and backend for MetaMax Fashions, a garments buying house in Dhaka, Bangladesh.
 
-## Getting started
+| App | Path | Stack |
+|---|---|---|
+| Website (+ admin UI, later) | [`apps/web`](apps/web/README.md) | Next.js 16, React 19, Tailwind CSS 4 |
+| Backend API | [`apps/api`](apps/api/README.md) | NestJS 12, Prisma 7, PostgreSQL 18 |
+| Infrastructure | [`infra/`](infra/) | Docker Compose, Nginx (production config arrives in Phase 14) |
+| Documentation | [`docs/backend/`](docs/backend/PROGRESS.md) | Audit, architecture, CI/CD design, phase reports |
+
+The two apps are independent: each has its own dependencies, Dockerfile and CI workflow, and they talk only through the documented API.
+
+## Quick start (local)
+
+Requirements: Node.js 26 LTS, Docker Desktop.
 
 ```bash
-npm install
-npm run dev     # http://localhost:3000
-npm run build   # production build
-npm run lint
+docker compose -f infra/compose/docker-compose.dev.yml up -d   # PostgreSQL
+
+cd apps/api && cp .env.example .env && npm ci && npm run start:dev   # http://localhost:4000/api/docs
+cd apps/web && npm ci && npm run dev                                 # http://localhost:3000
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://www.metamaxfashions.com`) in production so canonical URLs, the sitemap and structured data use the live domain.
+## CI/CD
 
-## Where to edit content
+GitHub Actions (`.github/workflows/`) checks every pull request and push to `main`: lint, type check, tests and a Docker image build for each app that changed. Publishing to GHCR and deploying to the Hostinger VPS are added in Phase 15. See [`docs/backend/02b-cicd-design.md`](docs/backend/02b-cicd-design.md).
 
-| What | File |
-| --- | --- |
-| Company name, email, phones, WhatsApp, address, MD details & portrait | `lib/site.ts` |
-| Navigation, stats, services, process, standards, testimonials, MD message, sustainability copy | `lib/content.ts` |
-| Apparel categories, styles, fabrics, MOQ & lead times | `lib/catalog.ts` |
-| Photography (Unsplash ids, named by subject) | `lib/images.ts` |
-| Colours, fonts and design tokens | `app/globals.css` |
-
-## Before launch — please review
-
-- **Placeholder figures**: statistics (factories, pieces per year, markets, capacity), testimonials (anonymised), and the certification list are representative. Replace them with verified MetaMax data.
-- **Managing Director**: add the official portrait to `public/` and set `site.md.portrait` (e.g. `/images/md-portrait.jpg`); review the leadership message in `lib/content.ts`.
-- **Logo**: `components/brand/logo.tsx` and `app/icon.svg` are an SVG redraw of the business-card monogram — swap in the official vector logo when available.
-- **Inquiry delivery**: `app/actions.ts → deliverInquiry()` currently only validates and logs. Connect it to your email provider or CRM.
-- **Photography**: stock images from Unsplash; replacing them with your own factory and product photos will strengthen credibility.
-
-## Structure
-
-```
-app/                 routes (home, about, managing-director, services, products/[slug],
-                     custom-design, manufacturing, sustainability, partnerships, contact)
-components/motion/   reveal, animated headings, parallax, counters, slideshow, carousel, intro
-components/sections/ page hero and shared section blocks
-components/forms/    inquiry form + accessible field helpers
-lib/                 content, catalog, SEO helpers, validation
-```
+Never commit `.env` files or secrets; only `*.example` files are tracked.

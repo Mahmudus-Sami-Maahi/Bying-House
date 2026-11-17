@@ -11,6 +11,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker image (apps/web/Dockerfile).
+  output: "standalone",
   experimental: {
     agentFeedback: true,
   },

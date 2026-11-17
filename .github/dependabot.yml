@@ -1,0 +1,32 @@
+# Weekly update PRs; each one runs the same checks as any other PR.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /apps/api
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    ignore:
+      # Prisma 8 is a different CLI; upgrade deliberately, not via Dependabot.
+      - dependency-name: "prisma"
+        update-types: [version-update:semver-major]
+      - dependency-name: "@prisma/*"
+        update-types: [version-update:semver-major]
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+
+  - package-ecosystem: docker
+    directories: [/apps/web, /apps/api]
+    schedule: { interval: weekly }

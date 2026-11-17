@@ -1,0 +1,12 @@
+// MetaMax Fashions — database schema.
+// Phase 3 only wires up the connection. Models are designed and added in
+// Phase 4 (see docs/backend/02-architecture.md §6).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -1,0 +1,107 @@
+# API (NestJS) — checks on every pull request and push to main.
+# Image build is verified here but NOT pushed; GHCR publishing and VPS
+# deployment are added in Phase 15 (docs/backend/02b-cicd-design.md).
+name: api
+
+on:
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/api
+
+jobs:
+  checks:
+    name: api / checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: metamax_test
+          POSTGRES_USER: metamax
+          POSTGRES_PASSWORD: metamax_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U metamax -d metamax_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://metamax:metamax_ci@localhost:5432/metamax_test?schema=public
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Unit tests
+        run: npm test
+
+      - name: End-to-end tests (real PostgreSQL)
+        run: npm run test:e2e
+
+      - name: OpenAPI document is up to date
+        run: |
+          npm run openapi:export
+          git diff --exit-code -- openapi.json || {
+            echo "::error::apps/api/openapi.json is out of date. Run 'npm run openapi:export' in apps/api and commit the result."
+            exit 1
+          }
+
+      - name: Dependency audit (production, high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+  image:
+    name: api / image build
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build image (not pushed)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/api
+          platforms: linux/amd64
+          push: false
+          build-args: |
+            APP_VERSION=sha-${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api

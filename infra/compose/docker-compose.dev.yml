@@ -1,0 +1,32 @@
+# Local development services (not used in production).
+#
+#   docker compose -f infra/compose/docker-compose.dev.yml up -d
+#   docker compose -f infra/compose/docker-compose.dev.yml down        # stop, keep data
+#
+# The web and api apps run on the host with `npm run dev` / `npm run start:dev`.
+# Credentials here are for local use only; production uses different secrets.
+name: metamax-dev
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: metamax
+      POSTGRES_USER: metamax
+      POSTGRES_PASSWORD: metamax_dev
+    ports:
+      # Bound to localhost only: not reachable from the network.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql.
+      - pgdata-dev:/var/lib/postgresql
+      - ./dev/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metamax -d metamax"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata-dev:
